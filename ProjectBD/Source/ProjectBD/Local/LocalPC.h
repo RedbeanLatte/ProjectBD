@@ -14,7 +14,8 @@ class PROJECTBD_API ALocalPC : public APlayerController
 {
 	GENERATED_BODY()
 	
-	
+public:
+	ALocalPC();
 	
 	
 };

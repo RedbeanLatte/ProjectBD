@@ -34,13 +34,51 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* Weapon;
-	
-	void Fire();
 
+	// Ironsight 동작용
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category="State")
+	bool bIsIronsight = false;
+
+	// Sprint 동작용
+	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "State")
+	bool bIsSprint = false;
+	
 	void Forward(float Value);
 	void Right(float Value);
 	void Pitch(float Value);
 	void Yaw(float Value);
 
 	void Crouching();
+	void DoIronsight();
+	void StartSprint();
+	void StopSprint();
+
+	FRotator GetAimOffset() const;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "State")
+	float SprintSpeed = 800.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "State")
+	float JogSpeed = 450.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "State")
+	float IronsightSpeed = 150.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "State")
+	float CrouchSpeed = 150.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Camera")
+	FVector NormalSpringArmPosition;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Camera")
+	FVector CrouchSpringArmPosition;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "State")
+	bool bIsFire = false;
+
+	void StartFire();
+	void StopFire();
+	void OnShoot();
+
+	FTimerHandle ShootTimer;
 };

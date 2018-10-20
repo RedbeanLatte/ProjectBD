@@ -18,5 +18,11 @@ void UMyPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			Pawn->GetActorRotation());
 
 		bIsCrouch = Pawn->bIsCrouched;
+
+		AimYaw = Pawn->GetAimOffset().Yaw;
+		AimPitch = Pawn->GetAimOffset().Pitch;
+
+		bIsIronsight = Pawn->bIsIronsight;
+		bIsSprint = Pawn->bIsSprint;
 	}
 }
