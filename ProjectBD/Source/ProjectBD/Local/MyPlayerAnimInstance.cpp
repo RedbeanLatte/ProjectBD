@@ -24,5 +24,42 @@ void UMyPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 		bIsIronsight = Pawn->bIsIronsight;
 		bIsSprint = Pawn->bIsSprint;
+
+		CurrentLeanType = Pawn->CurrentLeanType;
+
+		float TargetLeanAngle = 0;
+		if (CurrentLeanType == EPlayerLeanType::Left)
+		{
+			TargetLeanAngle = -30.0f;
+		}
+		else if (CurrentLeanType == EPlayerLeanType::Right)
+		{
+			TargetLeanAngle = 30.0f;
+		}
+		else //Normal
+		{
+			TargetLeanAngle = 0;
+		}
+
+		bLeftLean = Pawn->bLeftLean;
+		bRightLean = Pawn->bRightLean;
+
+		if (bLeftLean)
+		{
+			TargetLeanAngle = -30.0f;
+		}
+		else if (bRightLean)
+		{
+			TargetLeanAngle = 30.0f;
+		}
+		else //Normal
+		{
+			TargetLeanAngle = 0;
+		}
+
+		CurrentLeanAngle = FMath::FInterpTo(CurrentLeanAngle,
+			TargetLeanAngle,
+			DeltaSeconds,
+			15);
 	}
 }

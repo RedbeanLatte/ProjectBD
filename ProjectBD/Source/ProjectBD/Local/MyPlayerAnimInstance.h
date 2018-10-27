@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "Local/MyPlayer.h"
+
 #include "MyPlayerAnimInstance.generated.h"
 
 /**
@@ -37,4 +39,16 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	bool bIsSprint = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	EPlayerLeanType CurrentLeanType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
+	float CurrentLeanAngle;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Info")
+	bool bLeftLean = false;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Info")
+	bool bRightLean = false;
 };

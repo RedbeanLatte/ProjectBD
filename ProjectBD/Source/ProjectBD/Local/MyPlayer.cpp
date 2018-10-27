@@ -12,8 +12,14 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
 #include "GameFramework/PlayerController.h"
-#include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStatics.h" // Important, BP 유틸리티 함수
 #include "Kismet/KismetSystemLibrary.h"
+#include "Particles/ParticleSystem.h"
+#include "Sound/SoundBase.h"
+#include "Components/DecalComponent.h"
+#include "Local/FireCameraShake.h"
+#include "Local/BulletDamageType.h"
+#include "Animation/AnimMontage.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
@@ -75,6 +81,60 @@ AMyPlayer::AMyPlayer()
 	CrouchSpringArmPosition = FVector(NormalSpringArmPosition.X, 
 		NormalSpringArmPosition.Y, 
 		NormalSpringArmPosition.Z - 40);
+
+	//이펙트 로딩
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> P_FireEffect(
+		TEXT("ParticleSystem'/Game/Effects/P_AssaultRifle_MF.P_AssaultRifle_MF'"));
+	if (P_FireEffect.Succeeded())
+	{
+		FireEffect = P_FireEffect.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> P_HitEffect(
+		TEXT("ParticleSystem'/Game/Effects/P_AssaultRifle_IH.P_AssaultRifle_IH'"));
+	if (P_HitEffect.Succeeded())
+	{
+		HitEffect = P_HitEffect.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> P_BloodEffect(
+		TEXT("ParticleSystem'/Game/Effects/P_body_bullet_impact.P_body_bullet_impact'"));
+	if (P_BloodEffect.Succeeded())
+	{
+		BloodEffect = P_BloodEffect.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<USoundBase> S_FireSound(
+		TEXT("SoundCue'/Game/Sound/Weapons/SMG_Thompson/Cue_Thompson_Shot.Cue_Thompson_Shot'"));
+	if (S_FireSound.Succeeded())
+	{
+		FireSound = S_FireSound.Object;
+	}
+
+	//Load Decal
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> M_BulletDecal(
+		TEXT("MaterialInstanceConstant'/Game/Effects/Decal/M_BulletDecal_Inst.M_BulletDecal_Inst'"));
+	if (M_BulletDecal.Succeeded())
+	{
+		BulletDecal = M_BulletDecal.Object;
+	}
+
+	Tags.Add(TEXT("Player"));
+
+	//Anim Montage
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> DeadAnimation_Motage(
+		TEXT("AnimMontage'/Game/Male_Grunt/Animations/Death_1_Montage.Death_1_Montage'"));
+	if (DeadAnimation_Motage.Succeeded())
+	{
+		DeadAnimation = DeadAnimation_Motage.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> ReloadAnimation_Motage(
+		TEXT("AnimMontage'/Game/Male_Grunt/Animations/Reload_Rifle_Hip_Montage.Reload_Rifle_Hip_Montage'"));
+	if (ReloadAnimation_Motage.Succeeded())
+	{
+		ReloadAnimation = ReloadAnimation_Motage.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -104,6 +164,14 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &AMyPlayer::StartFire);
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &AMyPlayer::StopFire);
+
+	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Released, this, &AMyPlayer::StartReload);
+
+	PlayerInputComponent->BindAction(TEXT("LeanLeft"), IE_Pressed, this, &AMyPlayer::StartLeanLeft);
+	PlayerInputComponent->BindAction(TEXT("LeanLeft"), IE_Released, this, &AMyPlayer::StopLeanLeft);
+
+	PlayerInputComponent->BindAction(TEXT("LeanRight"), IE_Pressed, this, &AMyPlayer::StartLeanRight);
+	PlayerInputComponent->BindAction(TEXT("LeanRight"), IE_Released, this, &AMyPlayer::StopLeanRight);
 
 	PlayerInputComponent->BindAxis(TEXT("Forward"), this, &AMyPlayer::Forward);
 	PlayerInputComponent->BindAxis(TEXT("Right"), this, &AMyPlayer::Right);
@@ -244,6 +312,10 @@ void AMyPlayer::OnShoot()
 	//화면 가운데 위치를 3차원 월드 좌표로 변환
 	FVector WorldLocation;
 	FVector WorldDirection;
+
+	SizeX += FMath::RandRange(-5, 5);
+	SizeY += FMath::RandRange(0, 5);
+
 	UGameplayStatics::GetPlayerController(GetWorld(), 0)->DeprojectScreenPositionToWorld(
 		SizeX / 2,
 		SizeY / 2,
@@ -259,7 +331,7 @@ void AMyPlayer::OnShoot()
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic));
 	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldDynamic));
-	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+	ObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_PhysicsBody));
 	
 	//충돌 제외 리스트
 	TArray<AActor*> IgnoreActors;
@@ -282,15 +354,178 @@ void AMyPlayer::OnShoot()
 		3.0f
 	);
 
+	UGameplayStatics::SpawnSoundAttached(FireSound, Weapon);
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireEffect, Weapon->GetSocketTransform(TEXT("MuzzleFlash")));
+
+	// 카메라에서 화면 가운데로 충돌 처리
 	if (bResult)
 	{
-		UE_LOG(LogProjectBD, Warning, TEXT("Hit %s"), *OutHit.GetActor()->GetName());
-	}
+		//총구에서 맞은데까지 진짜로 총알이 날아가면 맞는지 확인
+		TraceStart = Weapon->GetSocketLocation(TEXT("MuzzleFlash"));
+		FVector Dir = OutHit.ImpactPoint - TraceStart;
+		TraceEnd = TraceStart + (Dir * 2.0f); //float 오차
 
+		//총구에서 히트 포인트까지 다시 체크(중간에 방해물체가 있는지)
+		bResult = UKismetSystemLibrary::LineTraceSingleForObjects(
+			GetWorld(),
+			TraceStart,
+			TraceEnd,
+			ObjectTypes,
+			true,
+			IgnoreActors,
+			EDrawDebugTrace::ForDuration,
+			OutHit,
+			true,
+			FLinearColor::Blue,
+			FLinearColor::Yellow,
+			3.0f
+		);
+		
+		if (bResult)
+		{
+			//UE_LOG(LogProjectBD, Warning, TEXT("Hit %s"), *OutHit.GetActor()->GetName());
+			//Hit Effect
+			if (OutHit.GetActor()->ActorHasTag(TEXT("Player")))
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+					BloodEffect,
+					OutHit.ImpactPoint,
+					OutHit.ImpactNormal.Rotation()
+				);
+			}
+			else
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),
+					HitEffect,
+					OutHit.ImpactPoint,
+					OutHit.ImpactNormal.Rotation()
+				);
+
+				UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+					BulletDecal,
+					FVector(5, 5, 5),
+					OutHit.ImpactPoint,
+					OutHit.ImpactNormal.Rotation(),
+					10.0f
+				);
+
+				//UE_LOG(LogProjectBD, Warning, TEXT("Decal Fade Size %f"), Decal->FadeScreenSize);
+				Decal->SetFadeScreenSize(0.001f); // Screen 차지 비율(percent)
+			}
+
+			//데미지 처리, 데미지 전달
+			UGameplayStatics::ApplyPointDamage(
+				OutHit.GetActor(),
+				30.0f,
+				Dir,
+				OutHit,
+				GetController(),
+				this,
+				UBulletDamageType::StaticClass()
+			);
+
+			/*UGameplayStatics::ApplyRadialDamage(
+				GetWorld(),
+				30.0f,
+				OutHit.Location,
+				300.0f,
+				UBulletDamageType::StaticClass(),
+				IgnoreActors
+			);*/
+		}
+		//카메라 흔들기
+		UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->PlayCameraShake(
+			UFireCameraShake::StaticClass());
+
+		//총구반동
+		FRotator NewRotation = GetControlRotation();
+		NewRotation.Pitch += 1.0f;
+		NewRotation.Yaw += FMath::RandRange(-0.5f, 0.5f);
+		UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetControlRotation(NewRotation);
+	}
 
 	//연사 구현
 	if (bIsFire)
 	{
 		GetWorldTimerManager().SetTimer(ShootTimer, this, &AMyPlayer::OnShoot, 0.2f);
 	}
+}
+
+float AMyPlayer::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	   
+	if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+	{
+		CurrentHP -= DamageAmount;
+
+		UE_LOG(LogProjectBD, Warning, TEXT("Radial Damage %f"), CurrentHP);
+	}
+	else if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)(&DamageEvent);
+
+		//UE_LOG(LogProjectBD, Warning, TEXT("Point Damage %s"), *PointDamageEvent->HitInfo.BoneName.ToString());
+
+		if (PointDamageEvent->HitInfo.BoneName.Compare(TEXT("head")) == 0)
+		{
+			CurrentHP = 0;
+		}
+		else
+		{
+			CurrentHP -= DamageAmount;
+		}
+
+		if (CurrentHP <= 0)
+		{
+			CurrentHP = 0;
+			DeadProcess();
+		}
+
+		UE_LOG(LogProjectBD, Warning, TEXT("CurrentHP %f"), CurrentHP);
+	}
+	else if (DamageEvent.IsOfType(FDamageEvent::ClassID))
+	{
+
+	}
+
+	return DamageAmount;
+}
+
+void AMyPlayer::DeadProcess()
+{
+	//GetMesh()->SetSimulatePhysics(true);
+	FString SectionName = FString::Printf(TEXT("Death_%d"), FMath::RandRange(1, 2));
+	PlayAnimMontage(DeadAnimation, 1.0f, FName(*SectionName));
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	DisableInput(Cast<APlayerController>(GetController()));
+}
+
+void AMyPlayer::StartReload()
+{
+	PlayAnimMontage(ReloadAnimation);
+}
+
+void AMyPlayer::StartLeanLeft()
+{
+	CurrentLeanType = EPlayerLeanType::Left;
+	bLeftLean = true;
+}
+
+void AMyPlayer::StopLeanLeft()
+{
+	CurrentLeanType = EPlayerLeanType::Normal;
+	bLeftLean = false;
+}
+
+void AMyPlayer::StartLeanRight()
+{
+	CurrentLeanType = EPlayerLeanType::Right;
+	bRightLean = true;
+}
+
+void AMyPlayer::StopLeanRight()
+{
+	CurrentLeanType = EPlayerLeanType::Normal;
+	bRightLean = false;
 }

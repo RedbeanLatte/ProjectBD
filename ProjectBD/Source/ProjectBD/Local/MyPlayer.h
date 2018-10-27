@@ -6,6 +6,14 @@
 #include "GameFramework/Character.h"
 #include "MyPlayer.generated.h"
 
+UENUM(BlueprintType)
+enum class EPlayerLeanType : uint8
+{
+	Normal = 0	UMETA(Display = "Normal"),
+	Left = 1	UMETA(Display = "Left"),
+	Right = 2	UMETA(Display = "Right")
+};
+
 UCLASS()
 class PROJECTBD_API AMyPlayer : public ACharacter
 {
@@ -81,4 +89,52 @@ public:
 	void OnShoot();
 
 	FTimerHandle ShootTimer;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Effect")
+	class UParticleSystem* FireEffect;
+	
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Effect")
+	class UParticleSystem* HitEffect;
+	
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Effect")
+	class UParticleSystem* BloodEffect;
+	
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Effect")
+	class USoundBase* FireSound;
+	
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Effect")
+	class UMaterialInterface* BulletDecal;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, 
+		class AController* EventInstigator, AActor* DamageCauser) override;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Health")
+	float CurrentHP = 100.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Health")
+	float MaxHP = 100.0f;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	class UAnimMontage* DeadAnimation;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	class UAnimMontage* ReloadAnimation;
+
+	void DeadProcess();
+	
+	void StartReload();
+
+	void StartLeanLeft();
+	void StopLeanLeft();
+	void StartLeanRight();
+	void StopLeanRight();
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	EPlayerLeanType CurrentLeanType = EPlayerLeanType::Normal;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	bool bLeftLean = false;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	bool bRightLean = false;
 };
