@@ -3,6 +3,15 @@
 #include "MyPlayerAnimInstance.h"
 #include "Local/MyPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/StreamableManager.h"
+
+void UMyPlayerAnimInstance::NativeInitializeAnimation()
+{
+	FStreamableManager Loader;
+	FStringAssetReference MontagePath(
+		TEXT("AnimMontage'/Game/Male_Grunt/Animations/Reload_Rifle_Hip_Montage.Reload_Rifle_Hip_Montage'"));
+	ReloadMontage = Loader.LoadSynchronous<UAnimMontage>(MontagePath);
+}
 
 void UMyPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
@@ -61,5 +70,15 @@ void UMyPlayerAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			TargetLeanAngle,
 			DeltaSeconds,
 			15);
+
+		bIsReload = Pawn->bIsReload;
+		if (bIsReload)
+		{
+			Montage_Play(ReloadMontage);
+			bIsReload = false;
+			Pawn->bIsReload = false;
+		}
+
+		bIsFire = Pawn->bIsFire;
 	}
 }

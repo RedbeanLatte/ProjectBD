@@ -122,8 +122,6 @@ public:
 
 	void DeadProcess();
 	
-	void StartReload();
-
 	void StartLeanLeft();
 	void StopLeanLeft();
 	void StartLeanRight();
@@ -137,4 +135,9 @@ public:
 
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
 	bool bRightLean = false;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Animation")
+	bool bIsReload = false;
+
+	void Reload();
 };

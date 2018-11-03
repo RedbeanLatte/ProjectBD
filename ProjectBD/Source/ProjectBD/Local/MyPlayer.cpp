@@ -165,8 +165,6 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Pressed, this, &AMyPlayer::StartFire);
 	PlayerInputComponent->BindAction(TEXT("Fire"), IE_Released, this, &AMyPlayer::StopFire);
 
-	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Released, this, &AMyPlayer::StartReload);
-
 	PlayerInputComponent->BindAction(TEXT("LeanLeft"), IE_Pressed, this, &AMyPlayer::StartLeanLeft);
 	PlayerInputComponent->BindAction(TEXT("LeanLeft"), IE_Released, this, &AMyPlayer::StopLeanLeft);
 
@@ -177,6 +175,8 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("Right"), this, &AMyPlayer::Right);
 	PlayerInputComponent->BindAxis(TEXT("Pitch"), this, &AMyPlayer::Pitch);
 	PlayerInputComponent->BindAxis(TEXT("Yaw"), this, &AMyPlayer::Yaw);
+
+	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AMyPlayer::Reload);
 }
 
 void AMyPlayer::Forward(float Value)
@@ -501,11 +501,6 @@ void AMyPlayer::DeadProcess()
 	DisableInput(Cast<APlayerController>(GetController()));
 }
 
-void AMyPlayer::StartReload()
-{
-	PlayAnimMontage(ReloadAnimation);
-}
-
 void AMyPlayer::StartLeanLeft()
 {
 	CurrentLeanType = EPlayerLeanType::Left;
@@ -528,4 +523,9 @@ void AMyPlayer::StopLeanRight()
 {
 	CurrentLeanType = EPlayerLeanType::Normal;
 	bRightLean = false;
+}
+
+void AMyPlayer::Reload()
+{
+	bIsReload = true;
 }

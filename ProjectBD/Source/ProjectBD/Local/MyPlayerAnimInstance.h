@@ -17,7 +17,10 @@ class PROJECTBD_API UMyPlayerAnimInstance : public UAnimInstance
 	GENERATED_BODY()
 	
 public:
-	virtual void NativeUpdateAnimation(float DeltaSeconds);
+	virtual void NativeInitializeAnimation() override;
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+	class UAnimMontage* ReloadMontage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Info")
 	float Direction;
@@ -51,4 +54,10 @@ public:
 
 	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Info")
 	bool bRightLean = false;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Info")
+	bool bIsReload = false;
+
+	UPROPERTY(EditAnyWhere, BlueprintReadOnly, Category = "Info")
+	bool bIsFire = false;
 };
