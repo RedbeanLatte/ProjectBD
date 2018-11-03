@@ -4,7 +4,6 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "Zombie/Zombie.h"
 
 AZombieAIController::AZombieAIController()
 {
@@ -35,4 +34,14 @@ void AZombieAIController::Possess(APawn * InPawn)
 void AZombieAIController::UnPossess()
 {
 	BTComponent->StopTree();
+}
+
+void AZombieAIController::SetTarget(AActor * Target)
+{
+	BBComponent->SetValueAsObject(FName(TEXT("Target")), Target);
+}
+
+void AZombieAIController::SetCurrentState(EZombieState NewState)
+{
+	BBComponent->SetValueAsEnum(FName(TEXT("CurrentState")), (uint8)NewState);
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Zombie/Zombie.h"
 #include "ZombieAIController.generated.h"
 
 /**
@@ -26,4 +27,8 @@ public:
 
 	virtual void Possess(APawn* InPawn) override;
 	virtual void UnPossess() override;
+
+	void SetTarget(AActor* Target);
+
+	void SetCurrentState(EZombieState NewState);
 };

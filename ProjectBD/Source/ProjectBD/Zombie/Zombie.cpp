@@ -35,6 +35,9 @@ void AZombie::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHP = MaxHP;
+
+	PawnSensing->OnSeePawn.AddDynamic(this, &AZombie::OnSeePawn);
+	PawnSensing->OnHearNoise.AddDynamic(this, &AZombie::OnHearNoise);
 }
 
 // Called every frame
@@ -54,5 +57,19 @@ void AZombie::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 float AZombie::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	return 0.0f;
+}
+
+void AZombie::OnSeePawn(APawn * Pawn)
+{
+	//UE_LOG(LogClass, Warning, TEXT("Pawn : %s"), *(Pawn->GetName()));
+	CurrentState = EZombieState::Chase;
+	
+	AZombieAIController* AIC = Cast<AZombieAIController>(GetController());
+	AIC->SetCurrentState(CurrentState);
+	AIC->SetTarget(Pawn);
+}
+
+void AZombie::OnHearNoise(APawn * Pawn, const FVector & Location, float Volume)
+{
 }
 

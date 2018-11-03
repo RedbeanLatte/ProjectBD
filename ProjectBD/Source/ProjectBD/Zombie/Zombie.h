@@ -61,4 +61,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UBehaviorTree* BehaviorTree;
+
+	UFUNCTION()
+	void OnSeePawn(APawn* Pawn);
+
+	UFUNCTION()
+	void OnHearNoise(APawn* Pawn, const FVector& Location, float Volume);
 };
