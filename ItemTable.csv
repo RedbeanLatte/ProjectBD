@@ -1,0 +1,7 @@
+RowName,ItemIndex,ItemName,ItemType,ItemEquipSlot,ItemFloat01,ItemCount,ItemThumnail,ItemMesh
+10,10,에너지드링크,Consume,NotUse,40,1,Texture2D'/Game/Items/Thumb/EnergyDrink.EnergyDrink',StaticMesh'/Game/Items/Energy/SM_MonsterDrink.SM_MonsterDrink'
+20,20,수류탄,Equip,WeaponRightHand,0,1,Texture2D'/Game/Items/Thumb/Grenade.Grenade',StaticMesh'/Game/Items/Grenade/SM_Grenade.SM_Grenade'
+30,30,구급상자,Consume,NotUse,100,1,Texture2D'/Game/Items/Thumb/Medipack.Medipack',StaticMesh'/Game/Items/MedicalBox/SM_MedicalBox.SM_MedicalBox'
+40,40,권총,Equip,WeaponRightHand,0,1,Texture2D'/Game/Items/Thumb/pistol.pistol',StaticMesh'/Game/Items/PM/SM_PM_X.SM_PM_X'
+50,50,2배율스코프,Equip,Weapon,0,1,Texture2D'/Game/Items/Thumb/socpe2X.socpe2X',StaticMesh'/Game/Items/ScopeX2/SM_RifleScope.SM_RifleScope'
+60,60,SMG45,Equip,WeaponBack01,0,1,Texture2D'/Game/Items/Thumb/SMG.SMG',StaticMesh'/Game/Items/SMG45/SM_SMG45.SM_SMG45'
