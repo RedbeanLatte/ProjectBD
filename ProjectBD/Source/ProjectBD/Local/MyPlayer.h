@@ -140,4 +140,13 @@ public:
 	bool bIsReload = false;
 
 	void Reload();
+
+	TArray<class AMasterItem*> GetItemList;
+
+	void AddItemList(class AMasterItem* Item);
+	void RemoveItemList(class AMasterItem* Item);
+
+	int GetClosestItem();
+
+	void PickupItem();
 };

@@ -29,6 +29,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
 	class UDataTable* ItemDataTable;
 	
-	UFUNCTION(BluprintCallable, Cateogry = "Data")
+	UFUNCTION(BlueprintCallable, Category = "Data")
 	FItemDataTable& GetItemData(int Index) const;
 };

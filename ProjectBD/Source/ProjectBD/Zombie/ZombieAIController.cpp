@@ -27,7 +27,7 @@ void AZombieAIController::Possess(APawn * InPawn)
 		BBComponent->InitializeBlackboard(*(Zombie->BehaviorTree->BlackboardAsset));
 		BTComponent->StartTree(*(Zombie->BehaviorTree));
 
-		BBComponent->SetValueAsVector(FName(TEXT("Target")), FVector(900, 800, 120));
+		//BBComponent->SetValueAsVector(FName(TEXT("Target")), FVector(900, 800, 120));
 	}
 }
 

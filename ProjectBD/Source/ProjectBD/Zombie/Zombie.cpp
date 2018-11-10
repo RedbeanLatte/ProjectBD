@@ -5,6 +5,8 @@
 #include "ConstructorHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Zombie/ZombieAIController.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 
 // Sets default values
 AZombie::AZombie()
@@ -56,17 +58,38 @@ void AZombie::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 float AZombie::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
+	if (CurrentHP <= 0)
+	{
+		return 0;
+	}
+
+	CurrentHP -= DamageAmount;
+
+	if (CurrentHP <= 0)
+	{
+		CurrentHP = 0;
+		CurrentState = EZombieState::Dead;
+		AZombieAIController* AIC = Cast<AZombieAIController>(GetController());
+		AIC->SetCurrentState(CurrentState);
+		GetCapsuleComponent()->SetSimulatePhysics(false);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetSimulatePhysics(true);
+		SetLifeSpan(10.0f);
+	}
+
 	return 0.0f;
 }
 
 void AZombie::OnSeePawn(APawn * Pawn)
 {
-	//UE_LOG(LogClass, Warning, TEXT("Pawn : %s"), *(Pawn->GetName()));
-	CurrentState = EZombieState::Chase;
-	
-	AZombieAIController* AIC = Cast<AZombieAIController>(GetController());
-	AIC->SetCurrentState(CurrentState);
-	AIC->SetTarget(Pawn);
+	if (CurrentState == EZombieState::Normal)
+	{
+		CurrentState = EZombieState::Chase;
+
+		AZombieAIController* AIC = Cast<AZombieAIController>(GetController());
+		AIC->SetCurrentState(CurrentState);
+		AIC->SetTarget(Pawn);
+	}
 }
 
 void AZombie::OnHearNoise(APawn * Pawn, const FVector & Location, float Volume)

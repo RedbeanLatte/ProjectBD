@@ -20,6 +20,8 @@
 #include "Local/FireCameraShake.h"
 #include "Local/BulletDamageType.h"
 #include "Animation/AnimMontage.h"
+#include "Items/MasterItem.h"
+#include "Local/LocalPC.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
@@ -177,6 +179,8 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis(TEXT("Yaw"), this, &AMyPlayer::Yaw);
 
 	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AMyPlayer::Reload);
+	
+	PlayerInputComponent->BindAction(TEXT("Pickup"), IE_Pressed, this, &AMyPlayer::PickupItem);
 }
 
 void AMyPlayer::Forward(float Value)
@@ -346,7 +350,7 @@ void AMyPlayer::OnShoot()
 		ObjectTypes,
 		true,
 		IgnoreActors,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::None,
 		OutHit,
 		true,
 		FLinearColor::Red,
@@ -373,7 +377,7 @@ void AMyPlayer::OnShoot()
 			ObjectTypes,
 			true,
 			IgnoreActors,
-			EDrawDebugTrace::ForDuration,
+			EDrawDebugTrace::None,
 			OutHit,
 			true,
 			FLinearColor::Blue,
@@ -528,4 +532,74 @@ void AMyPlayer::StopLeanRight()
 void AMyPlayer::Reload()
 {
 	bIsReload = true;
+}
+
+void AMyPlayer::AddItemList(AMasterItem * Item)
+{
+	if (!Item->IsPendingKill())
+	{
+		GetItemList.Add(Item);
+		int Index = GetClosestItem();
+		if (Index != -1)
+		{
+			ALocalPC* PC = Cast<ALocalPC>(GetController());
+			if (PC)
+			{
+				PC->ShowItemName(GetItemList[Index]->ItemData.ItemName, true);
+			}
+		}
+	}
+}
+
+void AMyPlayer::RemoveItemList(AMasterItem * Item)
+{
+	GetItemList.Remove(Item);
+	int Index = GetClosestItem();
+	if (Index != -1) // 주변에 아이템이 없을 때
+	{
+		ALocalPC* PC = Cast<ALocalPC>(GetController());
+		if (PC)
+		{
+			PC->ShowItemName(GetItemList[Index]->ItemData.ItemName, true);
+		}
+	}
+	else // 주변에 아이템이 한개라도 있을 때
+	{
+		ALocalPC* PC = Cast<ALocalPC>(GetController());
+		if (PC)
+		{
+			FString Temp(TEXT(""));
+			PC->ShowItemName(Temp, false);
+		}
+	}
+}
+
+int AMyPlayer::GetClosestItem()
+{
+	float Min = 9999999999.9f;
+	int MinIndex = -1;
+	int i = 0;
+	for (auto Item : GetItemList)
+	{
+		float Distance = FVector::Distance(GetActorLocation(), Item->GetActorLocation());
+		if (Min > Distance)
+		{
+			Min = Distance;
+			MinIndex = i;
+		}
+		i++;
+	}
+	return MinIndex;
+}
+
+void AMyPlayer::PickupItem()
+{
+	int ItemIndex = GetClosestItem();
+	if (ItemIndex != -1)
+	{
+		auto Item = GetItemList[ItemIndex];
+		GetItemList.Remove(Item);
+		//인벤토리에 추가
+		Item->Destroy();
+	}
 }

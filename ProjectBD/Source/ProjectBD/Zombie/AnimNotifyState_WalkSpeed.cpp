@@ -10,7 +10,7 @@ void UAnimNotifyState_WalkSpeed::NotifyBegin(USkeletalMeshComponent * MeshComp, 
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration);
 
 	AZombie* Pawn = Cast<AZombie>(MeshComp->GetOwner());
-	if (Pawn)
+	if (Pawn && Pawn->CurrentState == EZombieState::Normal)
 	{
 		Pawn->GetCharacterMovement()->MaxWalkSpeed = 10.0f;
 	}
@@ -26,7 +26,7 @@ void UAnimNotifyState_WalkSpeed::NotifyEnd(USkeletalMeshComponent * MeshComp, UA
 	Super::NotifyEnd(MeshComp, Animation);
 
 	AZombie* Pawn = Cast<AZombie>(MeshComp->GetOwner());
-	if (Pawn)
+	if (Pawn && Pawn->CurrentState == EZombieState::Normal)
 	{
 		Pawn->GetCharacterMovement()->MaxWalkSpeed = Pawn->WalkSpeed;
 	}

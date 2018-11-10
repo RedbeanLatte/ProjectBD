@@ -17,5 +17,9 @@ class PROJECTBD_API ALocalPC : public APlayerController
 public:
 	ALocalPC();
 	
+	virtual void BeginPlay() override;
 	
+	class UItemNameWidgetBase* ItemNameWidget;
+
+	void ShowItemName(FString& ItemName, bool Show = true);
 };

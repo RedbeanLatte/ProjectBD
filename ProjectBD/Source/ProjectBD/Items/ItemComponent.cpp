@@ -13,7 +13,7 @@ UItemComponent::UItemComponent()
 
 	// ...
 
-	static ConstructorHelpers::FObjectFinder<UDataTable> DT_ItemDataTable(TEXT("DataTable'/Game/Blueprints/Items/ItemTable.ItemTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> DT_ItemDataTable(TEXT("DataTable'/Game/Blueprints/Items/ItemTable.ItemTable_C'"));
 	if (DT_ItemDataTable.Succeeded())
 	{
 		ItemDataTable = DT_ItemDataTable.Object;
