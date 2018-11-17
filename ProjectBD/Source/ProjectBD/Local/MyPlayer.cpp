@@ -22,6 +22,7 @@
 #include "Animation/AnimMontage.h"
 #include "Items/MasterItem.h"
 #include "Local/LocalPC.h"
+#include "Local/BDGameInstance.h"
 
 // Sets default values
 AMyPlayer::AMyPlayer()
@@ -181,6 +182,8 @@ void AMyPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction(TEXT("Reload"), IE_Pressed, this, &AMyPlayer::Reload);
 	
 	PlayerInputComponent->BindAction(TEXT("Pickup"), IE_Pressed, this, &AMyPlayer::PickupItem);
+
+	PlayerInputComponent->BindAction(TEXT("Inventory"), IE_Pressed, this, &AMyPlayer::ShowInventory);
 }
 
 void AMyPlayer::Forward(float Value)
@@ -350,7 +353,7 @@ void AMyPlayer::OnShoot()
 		ObjectTypes,
 		true,
 		IgnoreActors,
-		EDrawDebugTrace::None,
+		EDrawDebugTrace::ForDuration,
 		OutHit,
 		true,
 		FLinearColor::Red,
@@ -377,7 +380,7 @@ void AMyPlayer::OnShoot()
 			ObjectTypes,
 			true,
 			IgnoreActors,
-			EDrawDebugTrace::None,
+			EDrawDebugTrace::ForDuration,
 			OutHit,
 			true,
 			FLinearColor::Blue,
@@ -600,6 +603,25 @@ void AMyPlayer::PickupItem()
 		auto Item = GetItemList[ItemIndex];
 		GetItemList.Remove(Item);
 		//인벤토리에 추가
+		UBDGameInstance* GI = Cast<UBDGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		if (GI)
+		{
+			GI->PushItem(Item->ItemData);
+			ALocalPC* PC = Cast<ALocalPC>(GetController());
+			if (PC)
+			{
+				PC->UpdateSlotData();
+			}
+		}
 		Item->Destroy();
+	}
+}
+
+void AMyPlayer::ShowInventory()
+{
+	ALocalPC* PC = Cast<ALocalPC>(GetController());
+	if (PC)
+	{
+		PC->ShowInventory();
 	}
 }

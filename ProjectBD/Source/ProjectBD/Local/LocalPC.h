@@ -20,6 +20,10 @@ public:
 	virtual void BeginPlay() override;
 	
 	class UItemNameWidgetBase* ItemNameWidget;
+	class UInventoryWidgetBase* InventoryWidget;
 
 	void ShowItemName(FString& ItemName, bool Show = true);
+
+	void ShowInventory();
+	void UpdateSlotData();
 };

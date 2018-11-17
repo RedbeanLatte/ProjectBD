@@ -149,4 +149,6 @@ public:
 	int GetClosestItem();
 
 	void PickupItem();
+
+	void ShowInventory();
 };
